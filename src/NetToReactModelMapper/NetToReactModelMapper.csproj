@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+
+        <!-- ── NuGet metadata ── -->
+        <PackageId>SourceCodeGen</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Tu Nombre</Authors>
+        <Company>Tu Empresa</Company>
+        <Description>Source Generator that extracts .NET models annotated with [FrontendModel] and generates TypeScript/React (.tsx) files automatically on every build.</Description>
+        <PackageTags>source-generator;roslyn;react;typescript;tsx;dotnet;codegen</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/TU_USUARIO/SourceCodeGen</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <!-- ── Critical flags for Source Generator NuGet packages ── -->
+        <!-- Do not add the packaging project's own DLL to the consumer's references -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <!-- Mark as a build-time tool so it is not listed as a runtime dependency -->
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <!-- Do not add transitive dependencies of CodeGenerator into the consumer's graph -->
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+        <!-- Where TsxWriter is published before packing -->
+        <TsxWriterPublishDir>$(MSBuildThisFileDirectory).tools-publish\</TsxWriterPublishDir>
+        <RootNamespace>SourceCodeGen.Library</RootNamespace>
+    </PropertyGroup>
+
+    <!-- ── Build CodeGenerator and Runtime as part of this build, but do not reference their output ── -->
+    <ItemGroup>
+        <ProjectReference Include="..\CodeGenerator\CodeGenerator.csproj"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="None"
+                          PrivateAssets="all" />
+        <ProjectReference Include="..\SourceCodeGen.Runtime\SourceCodeGen.Runtime.csproj"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="None"
+                          PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- ── analyzers/dotnet/cs/ ← CodeGenerator.dll (the Roslyn generator) ── -->
+    <ItemGroup>
+        <None Include="..\CodeGenerator\bin\$(Configuration)\netstandard2.0\CodeGenerator.dll"
+              Pack="true"
+              PackagePath="analyzers/dotnet/cs"
+              Visible="false" />
+    </ItemGroup>
+
+    <!-- ── lib/netstandard2.0/ ← SourceCodeGen.Runtime.dll (the runtime service) ── -->
+    <ItemGroup>
+        <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\netstandard2.0\SourceCodeGen.Runtime.dll"
+              Pack="true"
+              PackagePath="lib/netstandard2.0/"
+              Visible="false" />
+    </ItemGroup>
+
+    <!-- ── build/ ← MSBuild props and targets ── -->
+    <ItemGroup>
+        <None Include="build\SourceCodeGen.props"   Pack="true" PackagePath="build/" />
+        <None Include="build\SourceCodeGen.targets" Pack="true" PackagePath="build/" />
+    </ItemGroup>
+
+    <!--
+        TsxWriter publish happens at target execution time (not evaluation time),
+        so the <None Include> glob must also run inside a target.
+        Chain: PublishTsxWriter → AddTsxWriterToPackage → _GetPackageFiles
+    -->
+    <Target Name="PublishTsxWriter" BeforeTargets="AddTsxWriterToPackage">
+        <MSBuild Projects="..\TsxWriter\TsxWriter.csproj"
+                 Targets="Publish"
+                 Properties="Configuration=$(Configuration);PublishDir=$(TsxWriterPublishDir);PublishSingleFile=false;SelfContained=false" />
+    </Target>
+
+    <Target Name="AddTsxWriterToPackage" BeforeTargets="_GetPackageFiles">
+        <ItemGroup>
+            <None Include="$(TsxWriterPublishDir)**"
+                  Pack="true"
+                  PackagePath="tools/net10.0/"
+                  Visible="false" />
+        </ItemGroup>
+    </Target>
+
+</Project>

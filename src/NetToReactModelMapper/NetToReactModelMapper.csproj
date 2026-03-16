@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
 
         <!-- ── NuGet metadata ── -->
         <PackageId>SourceCodeGen</PackageId>
@@ -47,11 +47,11 @@
               Visible="false" />
     </ItemGroup>
 
-    <!-- ── lib/netstandard2.0/ ← SourceCodeGen.Runtime.dll (the runtime service) ── -->
+    <!-- ── lib/net8.0/ ← SourceCodeGen.Runtime.dll (the runtime service) ── -->
     <ItemGroup>
-        <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\netstandard2.0\SourceCodeGen.Runtime.dll"
+        <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\net8.0\SourceCodeGen.Runtime.dll"
               Pack="true"
-              PackagePath="lib/netstandard2.0/"
+              PackagePath="lib/net8.0/"
               Visible="false" />
     </ItemGroup>
 

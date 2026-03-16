@@ -9,13 +9,8 @@ using Microsoft.CodeAnalysis;
 
 namespace CodeGenerator.Generators;
 
-internal sealed class InterfaceFragmentGenerator : IFragmentGenerator
+internal sealed class InterfaceFragmentGenerator(ITypeMapper typeMapper) : IFragmentGenerator
 {
-    private readonly ITypeMapper _typeMapper;
-
-    public InterfaceFragmentGenerator(ITypeMapper typeMapper) =>
-        _typeMapper = typeMapper;
-
     public bool CanHandle(INamedTypeSymbol type) =>
         type.TypeKind != TypeKind.Enum;
 
@@ -65,8 +60,8 @@ internal sealed class InterfaceFragmentGenerator : IFragmentGenerator
 
         foreach (var prop in props)
         {
-            var tsType   = _typeMapper.Map(prop.Type);
-            var optional = _typeMapper.IsNullable(prop.Type) ? "?" : "";
+            var tsType   = typeMapper.Map(prop.Type);
+            var optional = typeMapper.IsNullable(prop.Type) ? "?" : "";
 
             sb.Append("  ")
               .Append(NamingHelper.ToCamelCase(prop.Name))

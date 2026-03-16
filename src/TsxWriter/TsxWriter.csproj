@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>TsWriter</RootNamespace>
 
+        <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
 
         <AssemblyName>TsxWriter</AssemblyName>

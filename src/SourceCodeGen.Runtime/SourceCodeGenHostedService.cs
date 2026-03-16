@@ -1,27 +1,14 @@
-using System;
-using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
 namespace SourceCodeGen;
 
-internal sealed class SourceCodeGenHostedService : IHostedService
+internal sealed class SourceCodeGenHostedService(string path, IHostEnvironment env) : IHostedService
 {
-    private readonly string _outputPath;
-    private readonly IHostEnvironment _env;
-
-    public SourceCodeGenHostedService(string outputPath, IHostEnvironment env)
-    {
-        _outputPath = outputPath;
-        _env = env;
-    }
-
     public Task StartAsync(CancellationToken ct)
     {
-        if (_env.IsProduction()) return Task.CompletedTask;
+        if (env.IsProduction()) return Task.CompletedTask;
 
         var entryAssembly = Assembly.GetEntryAssembly();
 
@@ -34,7 +21,7 @@ internal sealed class SourceCodeGenHostedService : IHostedService
             .GetType("SourceCodeGenOutputPath")
             ?.GetField("Value", BindingFlags.Public | BindingFlags.Static)
             ?.GetRawConstantValue() as string
-            ?? _outputPath;
+            ?? path;
 
         Directory.CreateDirectory(outputPath);
 

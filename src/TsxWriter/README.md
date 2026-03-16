@@ -38,5 +38,5 @@ TsxWriter is not meant to be run manually. It is called automatically by an MSBu
 
 ## Project setup
 
-- Target framework: `net10.0`
+- Target framework: `net8.0`
 - No external dependencies

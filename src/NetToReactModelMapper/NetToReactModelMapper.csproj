@@ -76,7 +76,7 @@
         <ItemGroup>
             <None Include="$(TsxWriterPublishDir)**"
                   Pack="true"
-                  PackagePath="tools/net10.0/"
+                  PackagePath="tools/net8.0/"
                   Visible="false" />
         </ItemGroup>
     </Target>

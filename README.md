@@ -28,7 +28,7 @@
 
 ### Requirements
 
-- .NET SDK 10.0+ (for `TsxWriter`)
+- .NET SDK 8.0+ (for `TsxWriter`)
 - Any project targeting `netstandard2.0` or later as the consumer
 
 ### Build

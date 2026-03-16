@@ -6,8 +6,8 @@ if (args.Length < 1)
     return 1;
 }
 
-IAssemblyContentReader reader = new AssemblyContentReader();
-ITypeScriptFileWriter  writer = new TypeScriptFileWriter();
+var reader = new AssemblyContentReader();
+var writer = new TypeScriptFileWriter();
 
 var fallback   = args.Length > 1 ? args[1] : "src/generated";
 var outputPath = reader.GetOutputPath(args[0], fallback);

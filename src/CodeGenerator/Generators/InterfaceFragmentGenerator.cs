@@ -21,7 +21,7 @@ internal sealed class InterfaceFragmentGenerator(ITypeMapper typeMapper) : IFrag
             : $"<{string.Join(", ", type.TypeParameters.Select(static t => t.Name))}>";
 
         var baseSymbol = type.TypeKind == TypeKind.Interface
-            ? (INamedTypeSymbol?)type.Interfaces.FirstOrDefault()
+            ? type.Interfaces.FirstOrDefault()
             : type.BaseType is { SpecialType: not SpecialType.System_Object } bt ? bt : null;
 
         var baseClause = baseSymbol is not null ? $" extends {baseSymbol.Name}" : "";

@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Hosting;
 
-namespace SourceCodeGen;
+namespace SourceCodeGen.Runtime;
 
 internal sealed class SourceCodeGenHostedService(string path, IHostEnvironment env) : IHostedService
 {

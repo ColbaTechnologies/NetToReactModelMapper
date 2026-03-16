@@ -17,7 +17,7 @@ public sealed class TypeScriptGenerator : IIncrementalGenerator
     private static readonly IFragmentGenerator[] FragmentGenerators =
     [
         new EnumFragmentGenerator(),
-        new InterfaceFragmentGenerator(TypeMapper),
+        new InterfaceFragmentGenerator(TypeMapper)
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -51,7 +51,7 @@ public sealed class TypeScriptGenerator : IIncrementalGenerator
                     return inv.ArgumentList.Arguments.Count > 0 &&
                            inv.ArgumentList.Arguments[0].Expression is LiteralExpressionSyntax lit
                         ? lit.Token.ValueText
-                        : (string?)null;
+                        : null;
                 })
             .Where(static p => p is not null)
             .Collect()

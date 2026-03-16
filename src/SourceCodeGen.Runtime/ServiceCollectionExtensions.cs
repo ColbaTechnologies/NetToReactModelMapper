@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace SourceCodeGen;
+namespace SourceCodeGen.Runtime;
 
 public static class ServiceCollectionExtensions
 {

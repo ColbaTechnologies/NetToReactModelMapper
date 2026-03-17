@@ -1,0 +1,29 @@
+<Project>
+  <!--
+    Optional post-build target: run TsxWriter to write .tsx files after every build.
+
+    To enable, add this to your .csproj:
+
+      <PropertyGroup>
+        <SourceCodeGenRunTsxWriter>true</SourceCodeGenRunTsxWriter>
+        <SourceCodeGenOutputPath>ClientApp/src/generated</SourceCodeGenOutputPath>
+      </PropertyGroup>
+
+    TsxWriter is shipped in the package under tools/net8.0/.
+    $(SourceCodeGenToolsPath) resolves to that directory automatically.
+  -->
+
+  <PropertyGroup>
+    <SourceCodeGenRunTsxWriter Condition="'$(SourceCodeGenRunTsxWriter)' == ''">false</SourceCodeGenRunTsxWriter>
+    <SourceCodeGenOutputPath Condition="'$(SourceCodeGenOutputPath)' == ''">src/generated</SourceCodeGenOutputPath>
+    <!-- Resolve the tools directory relative to this .targets file -->
+    <SourceCodeGenToolsPath Condition="'$(SourceCodeGenToolsPath)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\tools\net8.0\'))</SourceCodeGenToolsPath>
+  </PropertyGroup>
+
+  <Target Name="SourceCodeGenWriteTsx"
+          AfterTargets="Build"
+          Condition="'$(SourceCodeGenRunTsxWriter)' == 'true'">
+    <Exec Command="dotnet &quot;$(SourceCodeGenToolsPath)TsxWriter.dll&quot; &quot;$(OutputPath)$(AssemblyName).dll&quot; &quot;$(SourceCodeGenOutputPath)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

@@ -6,5 +6,6 @@ namespace CodeGenerator.Generators;
 internal interface IFragmentGenerator
 {
     bool CanHandle(INamedTypeSymbol type);
-    string Generate(INamedTypeSymbol type, CancellationToken ct);
+    /// <returns>The generated TypeScript fragment, or <c>null</c> if the type should be skipped.</returns>
+    string? Generate(INamedTypeSymbol type, CancellationToken ct);
 }

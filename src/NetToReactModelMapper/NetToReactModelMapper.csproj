@@ -5,14 +5,29 @@
 
         <!-- ── NuGet metadata ── -->
         <PackageId>SourceCodeGen</PackageId>
+        <!-- Version is overridden by CI from the git tag (e.g. v1.2.3 → 1.2.3) -->
         <Version>1.0.0</Version>
-        <Authors>Tu Nombre</Authors>
-        <Company>Tu Empresa</Company>
-        <Description>Source Generator that extracts .NET models annotated with [FrontendModel] and generates TypeScript/React (.tsx) files automatically on every build.</Description>
-        <PackageTags>source-generator;roslyn;react;typescript;tsx;dotnet;codegen</PackageTags>
+        <Authors>Colba</Authors>
+        <Company>Colba</Company>
+        <Description>Roslyn source generator that converts annotated .NET types and ASP.NET Core controllers into TypeScript files automatically on every build — zero runtime overhead. Supports [FrontendModel] for models/enums and [FrontendService] for typed API service objects.</Description>
+        <PackageTags>source-generator;roslyn;react;typescript;tsx;dotnet;codegen;aspnetcore;apifetch</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/TU_USUARIO/SourceCodeGen</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/Colba/NetToReactModelMapper</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Colba/NetToReactModelMapper</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <!-- Emit .snupkg with PDBs so consumers get exact source lines in stack traces -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <!--
+            Validates internal API consistency across TFMs on every dotnet pack.
+            Once v1.0.0 is published to NuGet, uncomment the baseline line below to
+            also catch accidental breaking changes between releases:
+            <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+        -->
+        <EnablePackageValidation>true</EnablePackageValidation>
 
         <!-- ── Critical flags for Source Generator NuGet packages ── -->
         <!-- Do not add the packaging project's own DLL to the consumer's references -->
@@ -21,11 +36,18 @@
         <DevelopmentDependency>true</DevelopmentDependency>
         <!-- Do not add transitive dependencies of CodeGenerator into the consumer's graph -->
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <!-- NU5128: expected — lib/ has multi-TFM folders but no dependency groups (intentional) -->
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
 
         <!-- Where TsxWriter is published before packing -->
         <TsxWriterPublishDir>$(MSBuildThisFileDirectory).tools-publish\</TsxWriterPublishDir>
         <RootNamespace>SourceCodeGen.Library</RootNamespace>
     </PropertyGroup>
+
+    <!-- ── README shown on nuget.org ── -->
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <!-- ── Build CodeGenerator and Runtime as part of this build, but do not reference their output ── -->
     <ItemGroup>
@@ -47,11 +69,25 @@
               Visible="false" />
     </ItemGroup>
 
-    <!-- ── lib/net8.0/ ← SourceCodeGen.Runtime.dll (the runtime service) ── -->
+    <!--
+        ── lib/<tfm>/ ← SourceCodeGen.Runtime.dll ────────────────────────────────
+        NuGet picks the closest matching TFM at install time:
+          • netstandard2.0  →  class libraries and pre-net8 projects
+          • net8.0          →  ASP.NET Core 8 apps
+          • net10.0         →  ASP.NET Core 10 apps
+    -->
     <ItemGroup>
+        <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\netstandard2.0\SourceCodeGen.Runtime.dll"
+              Pack="true"
+              PackagePath="lib/netstandard2.0/"
+              Visible="false" />
         <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\net8.0\SourceCodeGen.Runtime.dll"
               Pack="true"
               PackagePath="lib/net8.0/"
+              Visible="false" />
+        <None Include="..\SourceCodeGen.Runtime\bin\$(Configuration)\net10.0\SourceCodeGen.Runtime.dll"
+              Pack="true"
+              PackagePath="lib/net10.0/"
               Visible="false" />
     </ItemGroup>
 

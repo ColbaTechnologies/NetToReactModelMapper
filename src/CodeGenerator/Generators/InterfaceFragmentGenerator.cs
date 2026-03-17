@@ -30,30 +30,31 @@ internal sealed class InterfaceFragmentGenerator(ITypeMapper typeMapper) : IFrag
             .OfType<IPropertySymbol>()
             .Where(static p =>
                 p.DeclaredAccessibility == Accessibility.Public &&
-                !p.IsStatic &&
-                !p.IsIndexer)
+                p is { IsStatic: false, IsIndexer: false })
             .ToList();
 
-        // Collect referenced [FrontendModel] types for import statements
-        var imports = new SortedSet<string>(StringComparer.Ordinal);
+        // SortedSet allocated only when at least one import is needed.
+        SortedSet<string>? imports = null;
 
         if (baseSymbol is not null && HasFrontendModelAttribute(baseSymbol))
-            imports.Add(baseSymbol.Name);
+            (imports ??= new SortedSet<string>(StringComparer.Ordinal)).Add(baseSymbol.Name);
 
         foreach (var prop in props)
         {
             ct.ThrowIfCancellationRequested();
             foreach (var refType in GetFrontendModelReferences(prop.Type))
                 if (refType.Name != type.Name)
-                    imports.Add(refType.Name);
+                    (imports ??= new SortedSet<string>(StringComparer.Ordinal)).Add(refType.Name);
         }
 
         var sb = new StringBuilder(256);
 
-        foreach (var import in imports)
-            sb.AppendLine($"import type {{ {import} }} from './{import}Model';");
-
-        if (imports.Count > 0) sb.AppendLine();
+        if (imports is not null)
+        {
+            foreach (var import in imports)
+                sb.AppendLine($"import type {{ {import} }} from './{import}';");
+            sb.AppendLine();
+        }
 
         sb.Append("export interface ").Append(type.Name)
           .Append(typeParams).Append(baseClause).AppendLine(" {");
@@ -73,7 +74,7 @@ internal sealed class InterfaceFragmentGenerator(ITypeMapper typeMapper) : IFrag
         return sb.ToString();
     }
 
-    private static bool HasFrontendModelAttribute(INamedTypeSymbol type) =>
+    internal static bool HasFrontendModelAttribute(INamedTypeSymbol type) =>
         type.GetAttributes().Any(static a => a.AttributeClass?.Name == "FrontendModelAttribute");
 
     private static IEnumerable<INamedTypeSymbol> GetFrontendModelReferences(ITypeSymbol type)

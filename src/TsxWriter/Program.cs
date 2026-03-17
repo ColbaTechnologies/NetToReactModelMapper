@@ -2,16 +2,15 @@ using TsWriter;
 
 if (args.Length < 1)
 {
-    Console.Error.WriteLine("Usage: <assemblyPath> [outputDirectory]");
+    Console.Error.WriteLine("Usage: TsxWriter <assemblyPath> [outputDirectory]");
     return 1;
 }
 
 var reader = new AssemblyContentReader();
-var writer = new TypeScriptFileWriter();
+var  writer = new TypeScriptFileWriter();
 
-var fallback   = args.Length > 1 ? args[1] : "src/generated";
-var outputPath = reader.GetOutputPath(args[0], fallback);
-var models     = reader.Read(args[0]);
+var fallback = args.Length > 1 ? args[1] : "src/generated";
+var (outputPath, models) = reader.Read(args[0], fallback);
 
 writer.Write(models, outputPath);
 return 0;

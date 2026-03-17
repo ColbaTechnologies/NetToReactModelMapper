@@ -1,4 +1,5 @@
 using System.Text;
+
 namespace TsWriter;
 
 internal interface ITypeScriptFileWriter
@@ -8,6 +9,8 @@ internal interface ITypeScriptFileWriter
 
 internal sealed class TypeScriptFileWriter : ITypeScriptFileWriter
 {
+    private const string ExportKeyword = "export";
+
     public void Write(IReadOnlyDictionary<string, string> models, string outputDirectory)
     {
         if (models.Count == 0)
@@ -21,10 +24,12 @@ internal sealed class TypeScriptFileWriter : ITypeScriptFileWriter
         foreach (var (name, content) in models)
         {
             if (string.IsNullOrWhiteSpace(content) ||
-                !content.Contains("export", StringComparison.Ordinal))
+                !content.Contains(ExportKeyword, StringComparison.Ordinal))
+            {
                 continue;
+            }
 
-            var filePath = Path.Combine(outputDirectory, $"{name}Model.tsx");
+            var filePath = Path.Combine(outputDirectory, $"{name}.tsx");
             File.WriteAllText(filePath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             Console.WriteLine($"Written: {filePath}");
         }

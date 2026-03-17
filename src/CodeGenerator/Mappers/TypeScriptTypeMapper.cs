@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -5,6 +7,23 @@ namespace CodeGenerator.Mappers;
 
 internal sealed class TypeScriptTypeMapper : ITypeMapper
 {
+    private static readonly HashSet<string> _collectionNames = new(StringComparer.Ordinal)
+    {
+        "List", "IList", "IEnumerable", "ICollection", "IReadOnlyList", "IReadOnlyCollection"
+    };
+
+    private static readonly HashSet<string> _dictionaryNames = new(StringComparer.Ordinal)
+    {
+        "Dictionary", "IDictionary", "IReadOnlyDictionary"
+    };
+
+    // ── EXTENSION POINT ───────────────────────────────────────────────────────
+    // To add a new C# → TypeScript type mapping, add a case to this switch.
+    // Order matters: more specific patterns must come before broader fallbacks.
+    // Examples:
+    //   { Name: "DateOnly" } => "string" ← named type by name
+    //   { SpecialType: SpecialType.System_Char } => "string" ← special type
+    // ─────────────────────────────────────────────────────────────────────────
     public string Map(ITypeSymbol type) => type switch
     {
         // Nullable<T> wrapper
@@ -26,18 +45,12 @@ internal sealed class TypeScriptTypeMapper : ITypeMapper
         { SpecialType: SpecialType.System_Object } => "unknown",
 
         // Collections
-        INamedTypeSymbol
-        {
-            IsGenericType: true,
-            Name: "List" or "IList" or "IEnumerable" or "ICollection" or "IReadOnlyList"
-        } col => $"{Map(col.TypeArguments[0])}[]",
+        INamedTypeSymbol { IsGenericType: true } col when _collectionNames.Contains(col.Name)
+            => $"{Map(col.TypeArguments[0])}[]",
 
         // Dictionaries
-        INamedTypeSymbol
-        {
-            IsGenericType: true,
-            Name: "Dictionary" or "IDictionary" or "IReadOnlyDictionary"
-        } dict => $"Record<{Map(dict.TypeArguments[0])}, {Map(dict.TypeArguments[1])}>",
+        INamedTypeSymbol { IsGenericType: true } dict when _dictionaryNames.Contains(dict.Name)
+            => $"Record<{Map(dict.TypeArguments[0])}, {Map(dict.TypeArguments[1])}>",
 
         // Generic fallback
         INamedTypeSymbol { IsGenericType: true } generic =>

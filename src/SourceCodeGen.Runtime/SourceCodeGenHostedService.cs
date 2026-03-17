@@ -1,41 +1,68 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace SourceCodeGen.Runtime;
 
-internal sealed class SourceCodeGenHostedService(string path, IHostEnvironment env) : IHostedService
+internal sealed class SourceCodeGenHostedService(
+    string path,
+    IHostEnvironment env,
+    ILogger<SourceCodeGenHostedService> logger,
+    bool runInProduction = false) : IHostedService
 {
+    private const string ExportKeyword = "export";
+
     public Task StartAsync(CancellationToken ct)
     {
-        if (env.IsProduction()) return Task.CompletedTask;
+        if (!runInProduction && env.IsProduction())
+        {
+            return Task.CompletedTask;
+        }
 
         var entryAssembly = Assembly.GetEntryAssembly();
 
         var contentType = entryAssembly?.GetType("GeneratedTypeScriptContent");
-        if (contentType is null) return Task.CompletedTask;
+        if (contentType is null)
+        {
+            return Task.CompletedTask;
+        }
 
-        // Read the output path embedded by the Roslyn generator at compile time.
-        // Falls back to the constructor parameter if the constant is not present.
         var outputPath = entryAssembly!
-            .GetType("SourceCodeGenOutputPath")
-            ?.GetField("Value", BindingFlags.Public | BindingFlags.Static)
-            ?.GetRawConstantValue() as string
-            ?? path;
+                             .GetType("SourceCodeGenOutputPath")
+                             ?.GetField("Value", BindingFlags.Public | BindingFlags.Static)
+                             ?.GetRawConstantValue() as string
+                         ?? path;
 
         Directory.CreateDirectory(outputPath);
 
         foreach (var field in contentType.GetFields(BindingFlags.Public | BindingFlags.Static))
         {
-            if (field.GetRawConstantValue() is not string content) continue;
-            if (!content.Contains("export", StringComparison.Ordinal)) continue;
+            if (field.GetRawConstantValue() is not string content)
+            {
+                continue;
+            }
 
-            var filePath = Path.Combine(outputPath, $"{field.Name}Model.tsx");
-            File.WriteAllText(filePath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            // string.Contains(string, StringComparison) requires netstandard2.1+; use IndexOf instead.
+            if (content.IndexOf(ExportKeyword, StringComparison.Ordinal) < 0)
+            {
+                continue;
+            }
+
+            var filePath = Path.Combine(outputPath, $"{field.Name}.tsx");
+            try
+            {
+                File.WriteAllText(filePath, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to write TypeScript file {FilePath}", filePath);
+            }
         }
 
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken ct) =>
+        Task.CompletedTask;
 }

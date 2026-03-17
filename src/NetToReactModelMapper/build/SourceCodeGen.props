@@ -1,0 +1,24 @@
+<Project>
+  <!--
+    This file is auto-imported by NuGet into every project that references SourceCodeGen.
+    The Roslyn generator (analyzers/dotnet/cs/CodeGenerator.dll) is wired automatically
+    by NuGet — no manual setup needed.
+
+    IMPORTANT — how the output path is resolved:
+    The Roslyn generator detects the OUTPUT PATH by scanning your source code for a literal
+    string argument to AddSourceCodeGen(), NOT by reading MSBuild properties:
+
+        builder.Services.AddSourceCodeGen("ClientApp/src/generated");  ← detected at compile time
+
+    If you use Option B (TsxWriter) instead of the runtime service, you can set
+    <SourceCodeGenOutputPath> here and it will be passed to TsxWriter by the
+    SourceCodeGenWriteTsx target in SourceCodeGen.targets:
+
+    <PropertyGroup>
+      <SourceCodeGenOutputPath>ClientApp/src/generated</SourceCodeGenOutputPath>
+      <SourceCodeGenRunTsxWriter>true</SourceCodeGenRunTsxWriter>
+    </PropertyGroup>
+
+    This property is NOT read by the Roslyn generator — it only affects TsxWriter.
+  -->
+</Project>

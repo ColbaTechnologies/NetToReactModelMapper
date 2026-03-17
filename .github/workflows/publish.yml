@@ -1,0 +1,78 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'        # triggers on v1.0.0, v1.2.3, etc.
+  workflow_dispatch:    # allows manual trigger from GitHub UI
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 1.2.3 — no "v" prefix)'
+        required: true
+
+jobs:
+  publish:
+    name: Build, test & publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed for source link
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # Resolve version: from tag (v1.2.3 → 1.2.3) or from manual input
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # strip the leading 'v'
+            echo "value=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --logger "console;verbosity=normal"
+
+      - name: Pack
+        run: |
+          dotnet pack src/NetToReactModelMapper/NetToReactModelMapper.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./nupkg \
+            -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+          # Push symbol package if present (.snupkg)
+          if ls ./nupkg/*.snupkg 1>/dev/null 2>&1; then
+            dotnet nuget push ./nupkg/*.snupkg \
+              --api-key ${{ secrets.NUGET_API_KEY }} \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          fi
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-${{ steps.version.outputs.value }}
+          path: ./nupkg/
+          retention-days: 30

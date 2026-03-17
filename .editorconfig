@@ -1,0 +1,65 @@
+root = true
+
+# ── Universal ──────────────────────────────────────────────────────────────────
+[*]
+charset                  = utf-8
+end_of_line              = lf
+insert_final_newline     = true
+trim_trailing_whitespace = true
+
+# ── C# ─────────────────────────────────────────────────────────────────────────
+[*.cs]
+indent_style = space
+indent_size  = 4
+
+# Organise usings
+dotnet_sort_system_directives_first                                  = true
+dotnet_separate_import_directive_groups                              = false
+
+# Braces
+csharp_prefer_braces                                                 = true:suggestion
+csharp_new_line_before_open_brace                                    = all
+csharp_new_line_before_else                                          = true
+csharp_new_line_before_catch                                         = true
+csharp_new_line_before_finally                                       = true
+
+# Expression preferences
+csharp_prefer_simple_using_statement                                 = true:suggestion
+csharp_style_expression_bodied_methods                               = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties                            = when_on_single_line:suggestion
+
+# Naming: private fields are _camelCase
+dotnet_naming_rule.private_fields_camel.symbols                      = private_fields
+dotnet_naming_rule.private_fields_camel.style                        = camel_underscore
+dotnet_naming_rule.private_fields_camel.severity                     = suggestion
+dotnet_naming_symbols.private_fields.applicable_kinds               = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities     = private
+dotnet_naming_style.camel_underscore.capitalization                  = camel_case
+dotnet_naming_style.camel_underscore.required_prefix                 = _
+
+# Naming: constants are PascalCase (no ALL_CAPS)
+dotnet_naming_rule.constants_pascal.symbols                          = constants
+dotnet_naming_rule.constants_pascal.style                            = pascal_case_style
+dotnet_naming_rule.constants_pascal.severity                         = suggestion
+dotnet_naming_symbols.constants.applicable_kinds                     = field
+dotnet_naming_symbols.constants.required_modifiers                  = const
+dotnet_naming_style.pascal_case_style.capitalization                 = pascal_case
+
+# ── XML / csproj ───────────────────────────────────────────────────────────────
+[*.{xml,csproj,props,targets}]
+indent_style = space
+indent_size  = 4
+
+# ── JSON ───────────────────────────────────────────────────────────────────────
+[*.json]
+indent_style = space
+indent_size  = 2
+
+# ── YAML / GitHub Actions ──────────────────────────────────────────────────────
+[*.{yml,yaml}]
+indent_style = space
+indent_size  = 2
+
+# ── Markdown ───────────────────────────────────────────────────────────────────
+[*.md]
+trim_trailing_whitespace = false

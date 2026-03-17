@@ -4,8 +4,10 @@ namespace TsWriter;
 
 internal interface IAssemblyContentReader
 {
-    IReadOnlyDictionary<string, string> Read(string assemblyPath);
-    string GetOutputPath(string assemblyPath, string fallback);
+    /// <summary>Loads the assembly at once and returns both the output path and all model content.</summary>
+    (string outputPath, IReadOnlyDictionary<string, string> content) Read(
+        string assemblyPath,
+        string fallbackPath);
 }
 
 internal sealed class AssemblyContentReader : IAssemblyContentReader
@@ -13,36 +15,31 @@ internal sealed class AssemblyContentReader : IAssemblyContentReader
     private const string ContentTypeName    = "GeneratedTypeScriptContent";
     private const string OutputPathTypeName = "SourceCodeGenOutputPath";
 
-    public IReadOnlyDictionary<string, string> Read(string assemblyPath)
+    public (string outputPath, IReadOnlyDictionary<string, string> content) Read(
+        string assemblyPath,
+        string fallbackPath)
     {
         var asm = Assembly.LoadFrom(assemblyPath);
 
-        var type = asm.GetType(ContentTypeName)
-                   ?? throw new InvalidOperationException(
-                       $"Not found: {ContentTypeName}. Is the assembly compiled with [FrontendModel] attributes?");
+        var outputPath = asm.GetType(OutputPathTypeName)
+            ?.GetField("Value", BindingFlags.Public | BindingFlags.Static)
+            ?.GetRawConstantValue() as string
+            ?? fallbackPath;
 
-        var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+        var contentType = asm.GetType(ContentTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{ContentTypeName}' not found in '{assemblyPath}'. " +
+                "Ensure the assembly was compiled with [FrontendModel] or [FrontendService] attributes.");
+
+        var fields = contentType.GetFields(BindingFlags.Public | BindingFlags.Static);
         var result = new Dictionary<string, string>(fields.Length);
 
         foreach (var field in fields)
         {
-            var content = (string)field.GetValue(null)!;
-
-            content = content.Replace("\\n", "\n", StringComparison.Ordinal);
-
-            result[field.Name] = content;
+            var raw = (string)field.GetValue(null)!;
+            result[field.Name] = raw.Replace("\\n", "\n", StringComparison.Ordinal);
         }
 
-        return result;
-    }
-
-    public string GetOutputPath(string assemblyPath, string fallback)
-    {
-        var asm  = Assembly.LoadFrom(assemblyPath);
-        var type = asm.GetType(OutputPathTypeName);
-
-        return type?.GetField("Value", BindingFlags.Public | BindingFlags.Static)
-                   ?.GetRawConstantValue() as string
-               ?? fallback;
+        return (outputPath, result);
     }
 }

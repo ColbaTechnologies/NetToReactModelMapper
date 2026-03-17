@@ -51,7 +51,7 @@ bld/
 # ========================
 node_modules/
 dist/
-build/
+/build/
 .next/
 out/
 .nuxt/
@@ -102,6 +102,14 @@ $RECYCLE.BIN/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
+
+# ========================
+# NuGet packaging output
+# ========================
+# TsxWriter publish staging directory (used during dotnet pack)
+.tools-publish/
+# Local pack output (individual *.nupkg / *.snupkg already covered above)
+nupkg/
 
 # ========================
 # Misc

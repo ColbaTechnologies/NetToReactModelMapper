@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    Properties applied to EVERY project in the solution.
+    Project-specific overrides go in the individual .csproj files.
+  -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>
